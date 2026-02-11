@@ -1,0 +1,45 @@
+<div class="detail-container">
+  <div *ngIf="suggestion" class="suggestion-detail">
+    <div class="detail-header">
+      <h1>{{ suggestion.title }}</h1>
+      <div class="status-badge" [ngClass]="suggestion.status">
+        {{ suggestion.status | uppercase }}
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div class="info-section">
+        <div class="info-item">
+          <span class="info-label">Catégorie:</span>
+          <span class="category-badge">{{ suggestion.category }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Date:</span>
+          <span class="info-value">{{ suggestion.date | date: 'dd/MM/yyyy' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Nombre de Likes:</span>
+          <span class="info-value">👍 {{ suggestion.nbLikes }}</span>
+        </div>
+      </div>
+
+      <div class="description-section">
+        <h2>Description</h2>
+        <p>{{ suggestion.description }}</p>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <a routerLink="/suggestions" class="btn-back">← Retour à la liste</a>
+    </div>
+  </div>
+
+  <div *ngIf="!suggestion" class="not-found">
+    <h2>Suggestion Non Trouvée</h2>
+    <p>La suggestion avec l'ID {{ suggestionId }} n'existe pas.</p>
+    <a routerLink="/suggestions" class="btn-back">← Retour à la liste</a>
+  </div>
+</div>
+
