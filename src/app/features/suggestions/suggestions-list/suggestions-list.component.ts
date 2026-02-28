@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,22 +12,37 @@ import { SuggestionService } from '../suggestion.service';
   templateUrl: './suggestions-list.component.html',
   styleUrl: './suggestions-list.component.css'
 })
-export class SuggestionsListComponent {
+export class SuggestionsListComponent implements OnInit {
   searchText: string = '';
   favorites: Suggestion[] = [];
+  suggestions: Suggestion[] = [];
 
   constructor(private suggestionService: SuggestionService, private router: Router) {}
 
-  get suggestions(): Suggestion[] {
-    return this.suggestionService.getSuggestions();
+  ngOnInit(): void {
+    this.loadSuggestions();
+  }
+
+  loadSuggestions(): void {
+    this.suggestionService.getSuggestions().subscribe(data => {
+      this.suggestions = data;
+    });
   }
 
   navigateToAdd(): void {
     this.router.navigate(['/suggestions/add']);
   }
 
-  incrementLike(suggestion: Suggestion): void {
+  deleteSuggestion(id: number): void {
+    this.suggestionService.deleteSuggestion(id).subscribe(() => {
+      this.loadSuggestions();
+      this.router.navigate(['/suggestions']);
+    });
+  }
+
+  likeSuggestion(suggestion: Suggestion): void {
     suggestion.nbLikes++;
+    this.suggestionService.updateNbLikes(suggestion.id, suggestion.nbLikes).subscribe();
   }
 
   addToFavorites(suggestion: Suggestion): void {
@@ -48,4 +63,6 @@ export class SuggestionsListComponent {
     );
   }
 }
+
+
 

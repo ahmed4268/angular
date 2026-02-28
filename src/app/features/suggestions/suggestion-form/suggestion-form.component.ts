@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SuggestionService } from '../suggestion.service';
 import { Suggestion } from '../../../models/suggestion';
 
@@ -12,8 +12,9 @@ import { Suggestion } from '../../../models/suggestion';
   templateUrl: './suggestion-form.component.html',
   styleUrl: './suggestion-form.component.css'
 })
-export class SuggestionFormComponent {
+export class SuggestionFormComponent implements OnInit {
   suggestionForm: FormGroup;
+  editId: number | null = null;
 
   categories: string[] = [
     'Infrastructure et bâtiments',
@@ -31,7 +32,8 @@ export class SuggestionFormComponent {
   constructor(
     private fb: FormBuilder,
     private suggestionService: SuggestionService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     const today = new Date().toLocaleDateString('fr-FR');
     this.suggestionForm = this.fb.group({
@@ -43,22 +45,51 @@ export class SuggestionFormComponent {
     });
   }
 
+  ngOnInit(): void {
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam) {
+      this.editId = +idParam;
+      this.suggestionService.getSuggestionById(this.editId).subscribe(suggestion => {
+        this.suggestionForm.patchValue({
+          title: suggestion.title,
+          description: suggestion.description,
+          category: suggestion.category
+        });
+      });
+    }
+  }
+
   onSubmit(): void {
     if (this.suggestionForm.valid) {
-      const suggestions = this.suggestionService.getSuggestions();
-      const maxId = suggestions.length > 0 ? Math.max(...suggestions.map(s => s.id)) : 0;
-      const newSuggestion: Suggestion = {
-        id: maxId + 1,
-        title: this.suggestionForm.value.title,
-        description: this.suggestionForm.value.description,
-        category: this.suggestionForm.value.category,
-        date: new Date(),
-        status: 'en attente',
-        nbLikes: 0
-      };
-      this.suggestionService.addSuggestion(newSuggestion);
-      this.router.navigate(['/suggestions']);
+      if (this.editId) {
+        const updated: Suggestion = {
+          id: this.editId,
+          title: this.suggestionForm.value.title,
+          description: this.suggestionForm.value.description,
+          category: this.suggestionForm.value.category,
+          date: new Date(),
+          status: 'en attente',
+          nbLikes: 0
+        };
+        this.suggestionService.updateSuggestion(updated).subscribe(() => {
+          this.router.navigate(['/suggestions']);
+        });
+      } else {
+        const newSuggestion: Suggestion = {
+          id: 0,
+          title: this.suggestionForm.value.title,
+          description: this.suggestionForm.value.description,
+          category: this.suggestionForm.value.category,
+          date: new Date(),
+          status: 'en attente',
+          nbLikes: 0
+        };
+        this.suggestionService.addSuggestion(newSuggestion).subscribe(() => {
+          this.router.navigate(['/suggestions']);
+        });
+      }
     }
   }
 }
+
 
